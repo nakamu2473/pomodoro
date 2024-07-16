@@ -25,17 +25,17 @@
         time: 0,
         interval: null,
         running: false,
-        toFocus: true
+        toFocus: true,
+        minToSec: 60 // デバッグ中は1にすると楽
       };
     },
     created() {
-      this.time = this.focusTime * 60;
-      this.time = this.focusTime;
+      this.time = this.focusTime * this.minToSec;
     },
     computed: {
       formattedTime() {
-        const minutes = Math.floor(this.time / 60);
-        const seconds = this.time % 60;
+        const minutes = Math.floor(this.time / this.minToSec);
+        const seconds = this.time % this.minToSec;
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       },
     },

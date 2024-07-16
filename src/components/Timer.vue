@@ -29,7 +29,7 @@
       };
     },
     created() {
-      //this.time = this.focusTime * 60;
+      this.time = this.focusTime * 60;
       this.time = this.focusTime;
     },
     computed: {

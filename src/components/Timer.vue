@@ -61,9 +61,8 @@
                 interval: null,
                 running: false,
                 toFocus: true,
-                minToSec: 1, // デバッグ中は1にすると楽
+                minToSec: 60, // デバッグ中は1にすると楽
                 audio: null,
-                //break: new Audio('/assets/break.mp3') // 音声ファイルのパスを指定
             };
         },
         created() {

@@ -51,7 +51,7 @@
     export default {
         data() {
             return {
-                focusTime: 10,
+                focusTime: 20,
                 isBreak: 5,
                 pomodoroCount: 1,
                 inputFocusTime: "",

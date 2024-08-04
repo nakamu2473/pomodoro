@@ -20,86 +20,132 @@
   </template>
   
   <script>
-  export default {
-    data() {
-      return {
-        focusTime: 10,
-        isBreak: 5,
-        pomodoroCount: 1,
-        inputFocusTime: "",
-        inputIsBreak: "",
-        inputPomodoroCount: null,
-        time: 0,
-        interval: null,
-        running: false,
-        toFocus: true,
-        minToSec: 1 // デバッグ中は1にすると楽
-      };
-    },
-    created() {
-      this.time = this.focusTime * this.minToSec;
-    },
-    computed: {
-      formattedTime() {
-        const minutes = Math.floor(this.time / this.minToSec);
-        const seconds = this.time % this.minToSec;
-        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      },
-    },
-    methods: {
-      startTimer() {
-        if (!this.running && this.time > 0) {
-            this.running = true;
-            this.interval = setInterval(() => {
-                if (this.time > 0) {
-                    this.time--;
+  // ファイル名
+    const NAMES = {
+        start: "pomodolo_start",
+        stop: "pomodolo_stop",
+        min1: "1",
+        min2: "2",
+        min3: "3",
+        break_start: "break_start",
+        break_stop: "break_stop",
+    };
+
+    // 音声再生構造体
+    const Audios = {
+        instance: null,
+        constructor() {
+            this.instance = new Audio();
+            return this;
+        },
+        setPath(str) {
+            this.instance.src = `/assets/${str}.mp3`;
+            return this;
+        },
+        play() {
+            if (this.instance !== undefined) {
+                this.instance.play();
+            }
+        }
+    };
+    export default {
+        data() {
+            return {
+                focusTime: 10,
+                isBreak: 5,
+                pomodoroCount: 1,
+                inputFocusTime: "",
+                inputIsBreak: "",
+                inputPomodoroCount: null,
+                time: 0,
+                interval: null,
+                running: false,
+                toFocus: true,
+                minToSec: 1, // デバッグ中は1にすると楽
+                audio: null,
+                //break: new Audio('/assets/break.mp3') // 音声ファイルのパスを指定
+            };
+        },
+        created() {
+            this.time = this.focusTime * this.minToSec;
+        },
+        computed: {
+            formattedTime() {
+                const minutes = Math.floor(this.time / this.minToSec);
+                const seconds = this.time % this.minToSec;
+                return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            },
+        },
+        mounted() {
+            this.audio = Audios.constructor();
+        },
+        methods: {
+            startTimer() {
+                // ポモドーロタイマー開始
+                console.log("this.pomodoroCount",this.pomodoroCount);
+                if(this.pomodoroCount == 1 && this.toFocus) {
+                    Audios.setPath(NAMES.start).play();
                 } else {
                     if( this.toFocus ){
-                        this.time = this.isBreak;
+                        // 集中終了
+                        Audios.setPath(NAMES.break_stop).play();
                     } else {
-                        this.time = this.focusTime;
+                        // 休憩終了
+                        Audios.setPath(NAMES.break_start).play();
                     }
-                    this.toFocus = !this.toFocus;
-                    this.pomodoroCompleted();
                 }
-            }, 1000);
+                if (!this.running && this.time > 0) {
+                    this.running = true;
+                    this.interval = setInterval(() => {
+                        if (this.time > 0) {
+                            this.time--;
+                        } else {
+                            if( this.toFocus ){
+                                this.time = this.isBreak;
+                            } else {
+                                this.time = this.focusTime;
+                            }
+                            this.toFocus = !this.toFocus;
+                            this.pomodoroCompleted();
+                        }
+                    }, 1000);
+                }
+            },
+            stopBtnTimer() {
+                this.running = false;
+                clearInterval(this.interval);
+            },
+            pomodoroCompleted() {
+                if (this.toFocus && this.running) {
+                    // ポモドーロ1回分終了
+                    console.log("this.pomodoroCount",this.pomodoroCount);
+                    this.pomodoroCount++;
+                }
+                if (this.toFocus && this.running && this.inputPomodoroCount < this.pomodoroCount) {
+                    // ポモドーロタイマー停止
+                    this.running = false;
+                    this.resetTimer()
+                    Audios.setPath(NAMES.stop).play();
+                } else {
+                    this.startTimer();
+                }
+            },
+            resetTimer() {
+                // リセット
+                this.time = this.focusTime * this.minToSec;
+                this.pomodoroCount = 1;
+                this.inputFocusTime = null;
+                this.inputIsBreak = null;
+                this.inputPomodoroCount = null;
+                this.running = false;
+                clearInterval(this.interval);
+            },
+        },
+        beforeDestroy() {
+            this.resetTimer();
         }
-      },
-
-      stopBtnTimer() {
-        this.running = false;
-        clearInterval(this.interval);
-      },
-      pomodoroCompleted() {
-        if (this.toFocus && this.running) {
-            // ポモドーロ1回分終了
-            this.pomodoroCount++;
-        }
-        if (this.toFocus && this.running && this.inputPomodoroCount < this.pomodoroCount) {
-            // ポモドーロ停止
-            this.running = false;
-            this.resetTimer()
-        } else {
-            // 集中終了
-            this.startTimer();
-        }
-      },
-      resetTimer() {
-        // リセット
-        this.time = this.focusTime;
-        this.pomodoroCount = 1;
-        this.inputFocusTime = null;
-        this.inputIsBreak = null;
-        this.inputPomodoroCount = null;
-        this.running = false;
-        clearInterval(this.interval);
-      },
-    },
-    beforeDestroy() {
-      this.pomodoroCompleted();
-    },
-  };
-  </script>
+    };
+</script>
   
   <style scoped>
   .timer {
